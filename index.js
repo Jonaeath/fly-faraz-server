@@ -47,7 +47,17 @@ app.post('/bookingData', async(req,res) =>{
     res.send(result); 
    });
 
-
+   app.get('/bookingData', async(req,res)=>{
+    let query = {};
+    if(req.query.email){
+      query= {
+        email: req.query.email
+      }
+    }
+    const cursor = bookingCollection.find(query);
+    const orders = await cursor.toArray();
+    res.send(orders)
+   })
 
   } finally {
     
