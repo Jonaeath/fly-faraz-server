@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 4000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 
@@ -22,8 +22,8 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-     const flyCollection = client.db('flyFarazData').collection('flyData')
-
+     const flyCollection = client.db('flyFarazData').collection('flyData')   
+     const bookingCollection = client.db('flyFarazData').collection('bookingData');
 
      app.get('/flyData', async(req, res) =>{
         const query = {}
@@ -38,6 +38,16 @@ async function run() {
         const booking = await  flyCollection.findOne(query);
         res.send(booking);
       });
+      
+      // api order
+
+app.post('/bookingData', async(req,res) =>{
+    const booking = req.body;
+    const result = await bookingCollection.insertOne(booking);
+    res.send(result); 
+   });
+
+
 
   } finally {
     
@@ -48,9 +58,9 @@ run().catch(console.dir);
 
 
 app.get('/',(req,res)=>{
-    res.send('Start up server is running')
+    res.send('Fly Faraz server is running')
 }) 
 
 app.listen(port, ()=>{
-    console.log(`Start Up server running on ${port}`)
+    console.log(`Fly Farza server running on ${port}`)
 })
