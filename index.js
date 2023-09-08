@@ -35,7 +35,7 @@ async function run() {
        app.get('/flyData/:id', async(req, res) =>{
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
-        const booking = await  flyCollection.findOne(query);
+        const booking = await flyCollection.findOne(query);
         res.send(booking);
       });
       
@@ -58,6 +58,25 @@ app.post('/bookingData', async(req,res) =>{
     const orders = await cursor.toArray();
     res.send(orders)
    })
+
+   app.patch('/bookingData/:id', async(req, res)=> {
+    const id = req.params.id;
+    const status = req.body.status;
+    const query = {_id: new ObjectId(id)};
+    updatedDoc = {
+      $set:{
+        status: status
+      }
+    }
+    const result = await bookingCollection.updateOne(query, updatedDoc)
+   })
+
+   app.delete('/bookingData/:id', async(req, res)=> {
+    const id = req.params.id;
+    const query = {_id: new ObjectId(id)};
+    const result = await bookingCollection.deleteOne(query);
+    res.send(result);
+  })
 
   } finally {
     
