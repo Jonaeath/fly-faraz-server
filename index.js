@@ -26,10 +26,13 @@ async function run() {
      const bookingCollection = client.db('flyFarazData').collection('bookingData');
 
      app.get('/flyData', async(req, res) =>{
+        const page = parseInt(req.query.page);
+        const size = parseInt(req.query.size);
         const query = {}
         const cursor = flyCollection.find(query);
-        const flyData = await cursor.toArray();
-        res.send(flyData);
+        const flyData = await cursor.skip(page*size).limit(size).toArray();
+        const count = await flyCollection.estimatedDocumentCount(); //For Pagination
+        res.send({count, flyData});
        });
 
        app.get('/flyData/:id', async(req, res) =>{
@@ -38,8 +41,9 @@ async function run() {
         const booking = await flyCollection.findOne(query);
         res.send(booking);
       });
+
       
-      // api order
+  // api order
 
 app.post('/bookingData', async(req,res) =>{
     const booking = req.body;
