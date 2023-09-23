@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken')
 const app = express();
 const port = process.env.PORT || 4000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -9,6 +10,20 @@ require('dotenv').config()
 app.use(cors());
 app.use(express.json());
 
+function verifyJWT(req, res, next){
+    const authHeader = req.headers.authorization;
+    if(!authHeader){
+      res.status(401).send({message:'Unauthorized access'})
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(error, decoded){
+      if(error){
+        res.status(401).send({message:'Unauthorized access'})
+      }
+      req.decoded = decoded;
+      next()
+    })
+}
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWD}@cluster0.pg0dj0q.mongodb.net/?retryWrites=true&w=majority`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -24,6 +39,12 @@ async function run() {
   try {
      const flyCollection = client.db('flyFarazData').collection('flyData')   
      const bookingCollection = client.db('flyFarazData').collection('bookingData');
+     
+     app.post('/jwt',(req,res) =>{
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET,{expiresIn:'1h'})
+      res.send({token});
+     })
 
      app.get('/flyData', async(req, res) =>{
         const page = parseInt(req.query.page);
@@ -51,7 +72,12 @@ app.post('/bookingData', async(req,res) =>{
     res.send(result); 
    });
 
-   app.get('/bookingData', async(req,res)=>{
+   app.get('/bookingData', verifyJWT, async(req,res)=>{
+    const decoded = req.decoded;
+    if(decoded.email !== req.query.email){
+      res.status(403).send({message:'Unauthorized access'})
+    }
+
     let query = {};
     if(req.query.email){
       query= {
